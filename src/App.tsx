@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import ReactCrop, { Crop, PixelCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 import './App.css'
@@ -26,6 +26,41 @@ const cropPresets: CropPreset[] = [
 ]
 
 function App() {
+  const [imgSrc, setImgSrc] = useState<string>('')
+  const [crop, setCrop] = useState<Crop>()
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
+  const [selectedPreset, setSelectedPreset] = useState<string | null>(null)
+  const imgRef = useRef<HTMLImageElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  // Update canvas preview in real time
+  useEffect(() => {
+    if (!completedCrop || !imgRef.current || !canvasRef.current) return;
+    const image = imgRef.current;
+    const canvas = canvasRef.current;
+    const crop = completedCrop;
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const pixelRatio = window.devicePixelRatio || 1;
+    canvas.width = crop.width * pixelRatio;
+    canvas.height = crop.height * pixelRatio;
+    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    ctx.imageSmoothingQuality = 'high';
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(
+      image,
+      crop.x * scaleX,
+      crop.y * scaleY,
+      crop.width * scaleX,
+      crop.height * scaleY,
+      0,
+      0,
+      crop.width,
+      crop.height
+    );
+  }, [completedCrop, imgSrc]);
     const downloadCroppedImage = () => {
       if (!canvasRef.current) {
         return
@@ -44,12 +79,6 @@ function App() {
         URL.revokeObjectURL(url)
       })
     }
-  const [imgSrc, setImgSrc] = useState<string>('')
-  const [crop, setCrop] = useState<Crop>()
-  const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
-  const [selectedPreset, setSelectedPreset] = useState<string | null>(null)
-  const imgRef = useRef<HTMLImageElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const onSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
