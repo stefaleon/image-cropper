@@ -128,15 +128,16 @@ function App() {
     const x = (imgWidth - cropWidth) / 2
     const y = (imgHeight - cropHeight) / 2
 
-    setCrop({
+    const newCrop = {
       unit: 'px',
       width: cropWidth,
       height: cropHeight,
       x: x,
       y: y
-    })
-
-    setSelectedPreset(preset.name)
+    };
+    setCrop(newCrop);
+    setCompletedCrop(newCrop);
+    setSelectedPreset(preset.name);
   }
 
   const generateCroppedImage = async () => {
