@@ -8,6 +8,12 @@ h1 {
   margin-bottom: 2rem;
 }
 
+h2 {
+  font-size: 1.4rem;
+  margin-bottom: 1.5rem;
+  color: #888;
+}
+
 .upload-section {
   margin: 2rem 0;
 }
@@ -28,6 +34,65 @@ input[type="file"] {
 
 .file-label:hover {
   background-color: #535bf2;
+}
+
+.presets-section {
+  margin: 2rem 0;
+  padding: 2rem;
+  background-color: rgba(100, 108, 255, 0.05);
+  border-radius: 12px;
+}
+
+.presets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.preset-card {
+  padding: 1rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(100, 108, 255, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s;
+  text-align: center;
+}
+
+.preset-card:hover {
+  background-color: rgba(100, 108, 255, 0.1);
+  border-color: #646cff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(100, 108, 255, 0.2);
+}
+
+.preset-card.active {
+  background-color: rgba(100, 108, 255, 0.2);
+  border-color: #646cff;
+  border-width: 3px;
+  box-shadow: 0 0 20px rgba(100, 108, 255, 0.4);
+}
+
+.preset-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  color: #fff;
+}
+
+.preset-dimensions {
+  font-size: 0.85rem;
+  color: #aaa;
+  margin-bottom: 0.3rem;
+  font-family: 'Courier New', monospace;
+}
+
+.preset-description {
+  font-size: 0.75rem;
+  color: #888;
+  font-style: italic;
 }
 
 .crop-container {

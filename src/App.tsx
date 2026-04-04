@@ -3,10 +3,51 @@ import ReactCrop, { Crop, PixelCrop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 import './App.css'
 
+interface CropPreset {
+  name: string
+  width: number
+  height: number
+  description: string
+}
+
+const cropPresets: CropPreset[] = [
+  { name: 'Instagram Square', width: 1080, height: 1080, description: '1:1' },
+  { name: 'Instagram Portrait', width: 1080, height: 1350, description: '4:5' },
+  { name: 'Instagram Story', width: 1080, height: 1920, description: '9:16' },
+  { name: 'YouTube Thumbnail', width: 1280, height: 720, description: '16:9' },
+  { name: 'Facebook Cover', width: 820, height: 312, description: 'Cover' },
+  { name: 'Twitter Post', width: 1200, height: 675, description: '16:9' },
+  { name: 'LinkedIn Post', width: 1200, height: 627, description: 'Post' },
+  { name: 'HD Landscape', width: 1920, height: 1080, description: '16:9' },
+  { name: 'HD Portrait', width: 1080, height: 1920, description: '9:16' },
+  { name: 'Standard 4:3', width: 800, height: 600, description: '4:3' },
+  { name: 'Square 600', width: 600, height: 600, description: '1:1' },
+  { name: 'Pinterest Pin', width: 1000, height: 1500, description: '2:3' },
+]
+
 function App() {
+    const downloadCroppedImage = () => {
+      if (!canvasRef.current) {
+        return
+      }
+      canvasRef.current.toBlob((blob) => {
+        if (!blob) {
+          return
+        }
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'cropped-image.png'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      })
+    }
   const [imgSrc, setImgSrc] = useState<string>('')
   const [crop, setCrop] = useState<Crop>()
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
+  const [selectedPreset, setSelectedPreset] = useState<string | null>(null)
   const imgRef = useRef<HTMLImageElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -21,7 +62,6 @@ function App() {
   }
 
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const { width, height } = e.currentTarget
     setCrop({
       unit: '%',
       width: 50,
@@ -29,6 +69,45 @@ function App() {
       x: 25,
       y: 25
     })
+  }
+
+  const applyPreset = (preset: CropPreset) => {
+    if (!imgRef.current) return
+
+    const image = imgRef.current
+    const { width: presetWidth, height: presetHeight } = preset
+    const { width: imgWidth, height: imgHeight } = image
+
+    // Calculate the crop size to fit the preset aspect ratio
+    const aspectRatio = presetWidth / presetHeight
+    const imgAspectRatio = imgWidth / imgHeight
+
+    let cropWidth: number
+    let cropHeight: number
+
+    if (imgAspectRatio > aspectRatio) {
+      // Image is wider than preset - constrain by height
+      cropHeight = imgHeight
+      cropWidth = cropHeight * aspectRatio
+    } else {
+      // Image is taller than preset - constrain by width
+      cropWidth = imgWidth
+      cropHeight = cropWidth / aspectRatio
+    }
+
+    // Center the crop
+    const x = (imgWidth - cropWidth) / 2
+    const y = (imgHeight - cropHeight) / 2
+
+    setCrop({
+      unit: 'px',
+      width: cropWidth,
+      height: cropHeight,
+      x: x,
+      y: y
+    })
+
+    setSelectedPreset(preset.name)
   }
 
   const generateCroppedImage = async () => {
@@ -50,6 +129,7 @@ function App() {
 
     const pixelRatio = window.devicePixelRatio || 1
 
+
     canvas.width = crop.width * pixelRatio * scaleX
     canvas.height = crop.height * pixelRatio * scaleY
 
@@ -69,30 +149,11 @@ function App() {
     )
   }
 
-  const downloadCroppedImage = () => {
-    if (!canvasRef.current) {
-      return
-    }
-
-    canvasRef.current.toBlob((blob) => {
-      if (!blob) {
-        return
-      }
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'cropped-image.png'
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-    })
-  }
-
   return (
+
     <div className="App">
       <h1>React Image Crop</h1>
-      
+
       <div className="upload-section">
         <input
           type="file"
@@ -106,21 +167,45 @@ function App() {
       </div>
 
       {imgSrc && (
-        <div className="crop-container">
-          <ReactCrop
-            crop={crop}
-            onChange={(c) => setCrop(c)}
-            onComplete={(c) => setCompletedCrop(c)}
-            aspect={undefined}
-          >
-            <img
-              ref={imgRef}
-              alt="Crop me"
-              src={imgSrc}
-              onLoad={onImageLoad}
-            />
-          </ReactCrop>
-        </div>
+        <>
+          <div className="presets-section">
+            <h2>Choose Crop Dimensions</h2>
+            <div className="presets-grid">
+              {cropPresets.map((preset) => (
+                <button
+                  key={preset.name}
+                  className={`preset-card ${selectedPreset === preset.name ? 'active' : ''}`}
+                  onClick={() => applyPreset(preset)}
+                >
+                  <div className="preset-name">{preset.name}</div>
+                  <div className="preset-dimensions">
+                    {preset.width} × {preset.height}
+                  </div>
+                  <div className="preset-description">{preset.description}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="crop-container">
+            <ReactCrop
+              crop={crop}
+              onChange={(c) => {
+                setCrop(c)
+                setSelectedPreset(null) // Clear selection when manually adjusting
+              }}
+              onComplete={(c) => setCompletedCrop(c)}
+              aspect={undefined}
+            >
+              <img
+                ref={imgRef}
+                alt="Crop me"
+                src={imgSrc}
+                onLoad={onImageLoad}
+              />
+            </ReactCrop>
+          </div>
+        </>
       )}
 
       {completedCrop && (
