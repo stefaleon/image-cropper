@@ -43,28 +43,54 @@ function App() {
     const scaleY = image.naturalHeight / image.height;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const pixelRatio = window.devicePixelRatio || 1;
-    canvas.width = crop.width * pixelRatio;
-    canvas.height = crop.height * pixelRatio;
-    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-    ctx.imageSmoothingQuality = "high";
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(
-      image,
-      crop.x * scaleX,
-      crop.y * scaleY,
-      crop.width * scaleX,
-      crop.height * scaleY,
-      0,
-      0,
-      crop.width,
-      crop.height,
-    );
-  }, [completedCrop, imgSrc]);
+    
+    // Use preset size if selected, otherwise crop size
+    const preset = cropPresets.find(p => p.name === selectedPreset);
+    
+    if (preset) {
+      // When preset is selected, output EXACT preset dimensions (no pixelRatio)
+      canvas.width = preset.width;
+      canvas.height = preset.height;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.imageSmoothingQuality = "high";
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(
+        image,
+        crop.x * scaleX,
+        crop.y * scaleY,
+        crop.width * scaleX,
+        crop.height * scaleY,
+        0,
+        0,
+        preset.width,
+        preset.height
+      );
+    } else {
+      // When no preset, use crop size with pixelRatio for quality
+      const pixelRatio = window.devicePixelRatio || 1;
+      canvas.width = crop.width * pixelRatio;
+      canvas.height = crop.height * pixelRatio;
+      ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      ctx.imageSmoothingQuality = "high";
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(
+        image,
+        crop.x * scaleX,
+        crop.y * scaleY,
+        crop.width * scaleX,
+        crop.height * scaleY,
+        0,
+        0,
+        crop.width,
+        crop.height
+      );
+    }
+  }, [completedCrop, imgSrc, selectedPreset]);
   const downloadCroppedImage = () => {
     if (!canvasRef.current) {
       return;
     }
+    // Use the same logic as preview: output at preset size if selected
     canvasRef.current.toBlob((blob) => {
       if (!blob) {
         return;
@@ -72,7 +98,7 @@ function App() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "cropped-image.png";
+      a.download = selectedPreset ? `${selectedPreset.replace(/\s+/g, '_').toLowerCase()}_crop.png` : "cropped-image.png";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
