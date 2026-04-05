@@ -1,37 +1,37 @@
-import { useState, useRef, useEffect } from 'react'
-import ReactCrop, { Crop, PixelCrop } from 'react-image-crop'
-import 'react-image-crop/dist/ReactCrop.css'
-import './App.css'
+import { useState, useRef, useEffect } from "react";
+import ReactCrop, { Crop, PixelCrop } from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
+import "./App.css";
 
 interface CropPreset {
-  name: string
-  width: number
-  height: number
-  description: string
+  name: string;
+  width: number;
+  height: number;
+  description: string;
 }
 
 const cropPresets: CropPreset[] = [
-  { name: 'Instagram Square', width: 1080, height: 1080, description: '1:1' },
-  { name: 'Instagram Portrait', width: 1080, height: 1350, description: '4:5' },
-  { name: 'Instagram Story', width: 1080, height: 1920, description: '9:16' },
-  { name: 'YouTube Thumbnail', width: 1280, height: 720, description: '16:9' },
-  { name: 'Facebook Cover', width: 820, height: 312, description: 'Cover' },
-  { name: 'Twitter Post', width: 1200, height: 675, description: '16:9' },
-  { name: 'LinkedIn Post', width: 1200, height: 627, description: 'Post' },
-  { name: 'HD Landscape', width: 1920, height: 1080, description: '16:9' },
-  { name: 'HD Portrait', width: 1080, height: 1920, description: '9:16' },
-  { name: 'Standard 4:3', width: 800, height: 600, description: '4:3' },
-  { name: 'Square 600', width: 600, height: 600, description: '1:1' },
-  { name: 'Pinterest Pin', width: 1000, height: 1500, description: '2:3' },
-]
+  { name: "Instagram Square", width: 1080, height: 1080, description: "1:1" },
+  { name: "Instagram Portrait", width: 1080, height: 1350, description: "4:5" },
+  { name: "Instagram Story", width: 1080, height: 1920, description: "9:16" },
+  { name: "YouTube Thumbnail", width: 1280, height: 720, description: "16:9" },
+  { name: "Facebook Cover", width: 820, height: 312, description: "Cover" },
+  { name: "Twitter Post", width: 1200, height: 675, description: "16:9" },
+  { name: "LinkedIn Post", width: 1200, height: 627, description: "Post" },
+  { name: "HD Landscape", width: 1920, height: 1080, description: "16:9" },
+  { name: "HD Portrait", width: 1080, height: 1920, description: "9:16" },
+  { name: "Standard 4:3", width: 800, height: 600, description: "4:3" },
+  { name: "Square 600", width: 600, height: 600, description: "1:1" },
+  { name: "Pinterest Pin", width: 1000, height: 1500, description: "2:3" },
+];
 
 function App() {
-  const [imgSrc, setImgSrc] = useState<string>('')
-  const [crop, setCrop] = useState<Crop>()
-  const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
-  const [selectedPreset, setSelectedPreset] = useState<string | null>(null)
-  const imgRef = useRef<HTMLImageElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [imgSrc, setImgSrc] = useState<string>("");
+  const [crop, setCrop] = useState<Crop>();
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+  const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Update canvas preview in real time
   useEffect(() => {
@@ -41,13 +41,13 @@ function App() {
     const crop = completedCrop;
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
     const pixelRatio = window.devicePixelRatio || 1;
     canvas.width = crop.width * pixelRatio;
     canvas.height = crop.height * pixelRatio;
     ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-    ctx.imageSmoothingQuality = 'high';
+    ctx.imageSmoothingQuality = "high";
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(
       image,
@@ -58,113 +58,112 @@ function App() {
       0,
       0,
       crop.width,
-      crop.height
+      crop.height,
     );
   }, [completedCrop, imgSrc]);
-    const downloadCroppedImage = () => {
-      if (!canvasRef.current) {
-        return
-      }
-      canvasRef.current.toBlob((blob) => {
-        if (!blob) {
-          return
-        }
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = 'cropped-image.png'
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-      })
+  const downloadCroppedImage = () => {
+    if (!canvasRef.current) {
+      return;
     }
+    canvasRef.current.toBlob((blob) => {
+      if (!blob) {
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "cropped-image.png";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  };
 
   const onSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const reader = new FileReader()
-      reader.addEventListener('load', () => {
-        setImgSrc(reader.result?.toString() || '')
-      })
-      reader.readAsDataURL(e.target.files[0])
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        setImgSrc(reader.result?.toString() || "");
+      });
+      reader.readAsDataURL(e.target.files[0]);
     }
-  }
+  };
 
   const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     setCrop({
-      unit: '%',
+      unit: "%",
       width: 50,
       height: 50,
       x: 25,
-      y: 25
-    })
-  }
+      y: 25,
+    });
+  };
 
   const applyPreset = (preset: CropPreset) => {
-    if (!imgRef.current) return
+    if (!imgRef.current) return;
 
-    const image = imgRef.current
-    const { width: presetWidth, height: presetHeight } = preset
-    const { width: imgWidth, height: imgHeight } = image
+    const image = imgRef.current;
+    const { width: presetWidth, height: presetHeight } = preset;
+    const { width: imgWidth, height: imgHeight } = image;
 
     // Calculate the crop size to fit the preset aspect ratio
-    const aspectRatio = presetWidth / presetHeight
-    const imgAspectRatio = imgWidth / imgHeight
+    const aspectRatio = presetWidth / presetHeight;
+    const imgAspectRatio = imgWidth / imgHeight;
 
-    let cropWidth: number
-    let cropHeight: number
+    let cropWidth: number;
+    let cropHeight: number;
 
     if (imgAspectRatio > aspectRatio) {
       // Image is wider than preset - constrain by height
-      cropHeight = imgHeight
-      cropWidth = cropHeight * aspectRatio
+      cropHeight = imgHeight;
+      cropWidth = cropHeight * aspectRatio;
     } else {
       // Image is taller than preset - constrain by width
-      cropWidth = imgWidth
-      cropHeight = cropWidth / aspectRatio
+      cropWidth = imgWidth;
+      cropHeight = cropWidth / aspectRatio;
     }
 
     // Center the crop
-    const x = (imgWidth - cropWidth) / 2
-    const y = (imgHeight - cropHeight) / 2
+    const x = (imgWidth - cropWidth) / 2;
+    const y = (imgHeight - cropHeight) / 2;
 
     const newCrop = {
-      unit: 'px',
+      unit: "px",
       width: cropWidth,
       height: cropHeight,
       x: x,
-      y: y
+      y: y,
     };
     setCrop(newCrop);
     setCompletedCrop(newCrop);
     setSelectedPreset(preset.name);
-  }
+  };
 
   const generateCroppedImage = async () => {
     if (!completedCrop || !imgRef.current || !canvasRef.current) {
-      return
+      return;
     }
 
-    const image = imgRef.current
-    const canvas = canvasRef.current
-    const crop = completedCrop
+    const image = imgRef.current;
+    const canvas = canvasRef.current;
+    const crop = completedCrop;
 
-    const scaleX = image.naturalWidth / image.width
-    const scaleY = image.naturalHeight / image.height
-    const ctx = canvas.getContext('2d')
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+    const ctx = canvas.getContext("2d");
 
     if (!ctx) {
-      return
+      return;
     }
 
-    const pixelRatio = window.devicePixelRatio || 1
+    const pixelRatio = window.devicePixelRatio || 1;
 
+    canvas.width = crop.width * pixelRatio * scaleX;
+    canvas.height = crop.height * pixelRatio * scaleY;
 
-    canvas.width = crop.width * pixelRatio * scaleX
-    canvas.height = crop.height * pixelRatio * scaleY
-
-    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
-    ctx.imageSmoothingQuality = 'high'
+    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    ctx.imageSmoothingQuality = "high";
 
     ctx.drawImage(
       image,
@@ -175,12 +174,11 @@ function App() {
       0,
       0,
       crop.width * scaleX,
-      crop.height * scaleY
-    )
-  }
+      crop.height * scaleY,
+    );
+  };
 
   return (
-
     <div className="App">
       <h1>React Image Crop</h1>
 
@@ -204,7 +202,7 @@ function App() {
               {cropPresets.map((preset) => (
                 <button
                   key={preset.name}
-                  className={`preset-card ${selectedPreset === preset.name ? 'active' : ''}`}
+                  className={`preset-card ${selectedPreset === preset.name ? "active" : ""}`}
                   onClick={() => applyPreset(preset)}
                 >
                   <div className="preset-name">{preset.name}</div>
@@ -221,8 +219,8 @@ function App() {
             <ReactCrop
               crop={crop}
               onChange={(c) => {
-                setCrop(c)
-                setSelectedPreset(null) // Clear selection when manually adjusting
+                setCrop(c);
+                setSelectedPreset(null); // Clear selection when manually adjusting
               }}
               onComplete={(c) => setCompletedCrop(c)}
               aspect={undefined}
@@ -240,12 +238,8 @@ function App() {
 
       {completedCrop && (
         <div className="actions">
-          <button onClick={generateCroppedImage}>
-            Preview Crop
-          </button>
-          <button onClick={downloadCroppedImage}>
-            Download Cropped Image
-          </button>
+          <button onClick={generateCroppedImage}>Preview Crop</button>
+          <button onClick={downloadCroppedImage}>Download Cropped Image</button>
         </div>
       )}
 
@@ -255,8 +249,8 @@ function App() {
           <canvas
             ref={canvasRef}
             style={{
-              border: '1px solid #ccc',
-              objectFit: 'contain',
+              border: "1px solid #ccc",
+              objectFit: "contain",
               width: Math.max(completedCrop.width, 100),
               height: Math.max(completedCrop.height, 100),
             }}
@@ -264,7 +258,7 @@ function App() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
