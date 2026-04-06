@@ -1,9 +1,12 @@
 import { useState, useRef } from "react";
-import ReactCrop, { Crop, PixelCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import "./App.css";
 import { cropPresets, CropPreset } from "./cropPresets";
 import useCropCanvas from "./useCropCanvas";
+import PresetSelector from "./PresetSelector";
+import Cropper from "./Cropper";
+import CropPreview from "./CropPreview";
+import { Crop, PixelCrop } from "react-image-crop";
 
 function App() {
   const [imgSrc, setImgSrc] = useState<string>("");
@@ -64,7 +67,11 @@ function App() {
     });
   };
 
-  const applyPreset = (preset: CropPreset) => {
+  const applyPreset = (preset: CropPreset | null) => {
+    if (!preset) {
+      setSelectedPreset(null);
+      return;
+    }
     if (!imgRef.current) return;
     const image = imgRef.current;
     const { width: presetWidth, height: presetHeight } = preset;
@@ -148,43 +155,20 @@ function App() {
 
       {imgSrc && (
         <>
-          <div className="presets-section">
-            <h2>Choose Crop Dimensions</h2>
-            <div className="presets-grid">
-              {cropPresets.map((preset) => (
-                <button
-                  key={preset.name}
-                  className={`preset-card ${selectedPreset === preset.name ? "active" : ""}`}
-                  onClick={() => applyPreset(preset)}
-                >
-                  <div className="preset-name">{preset.name}</div>
-                  <div className="preset-dimensions">
-                    {preset.width} × {preset.height}
-                  </div>
-                  <div className="preset-description">{preset.description}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="crop-container">
-            <ReactCrop
-              crop={crop}
-              onChange={(c) => {
-                setCrop(c);
-                setSelectedPreset(null); // Clear selection when manually adjusting
-              }}
-              onComplete={(c) => setCompletedCrop(c)}
-              aspect={undefined}
-            >
-              <img
-                ref={imgRef}
-                alt="Crop me"
-                src={imgSrc}
-                onLoad={onImageLoad}
-              />
-            </ReactCrop>
-          </div>
+          <PresetSelector
+            selectedPreset={selectedPreset}
+            onSelect={applyPreset}
+          />
+          <Cropper
+            imgSrc={imgSrc}
+            crop={crop}
+            setCrop={setCrop}
+            setCompletedCrop={setCompletedCrop}
+            imgRef={imgRef}
+            onImageLoad={onImageLoad}
+            selectedPreset={selectedPreset}
+            setSelectedPreset={setSelectedPreset}
+          />
         </>
       )}
 
@@ -196,26 +180,12 @@ function App() {
       )}
 
       {completedCrop && (
-        <div className="preview-section">
-          <h2>Preview:</h2>
-          <canvas
-            ref={canvasRef}
-            width={(() => {
-              const preset = cropPresets.find((p) => p.name === selectedPreset);
-              return preset ? preset.width : completedCrop.width;
-            })()}
-            height={(() => {
-              const preset = cropPresets.find((p) => p.name === selectedPreset);
-              return preset ? preset.height : completedCrop.height;
-            })()}
-            style={{
-              border: "1px solid #ccc",
-              objectFit: "contain",
-              width: Math.max(completedCrop.width, 100),
-              height: Math.max(completedCrop.height, 100),
-            }}
-          />
-        </div>
+        <CropPreview
+          canvasRef={canvasRef}
+          completedCrop={completedCrop}
+          selectedPreset={selectedPreset}
+          cropPresets={cropPresets}
+        />
       )}
     </div>
   );
